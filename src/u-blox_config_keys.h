@@ -784,6 +784,19 @@ const uint32_t UBLOX_CFG_MSGOUT_UBX_TIM_SVIN_UART1 = 0x20910098; // Output rate 
 const uint32_t UBLOX_CFG_MSGOUT_UBX_TIM_SVIN_UART2 = 0x20910099; // Output rate of the UBX-TIM-SVIN message on port UART2
 const uint32_t UBLOX_CFG_MSGOUT_UBX_TIM_SVIN_USB = 0x2091009a; // Output rate of the UBX-TIM-SVIN message on port USB
 
+//Additional CFG_MSGOUT keys for the NEO-D9S
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+const uint32_t UBLOX_CFG_MSGOUT_UBX_RXM_PMP_I2C   = 0x2091031d; 
+const uint32_t UBLOX_CFG_MSGOUT_UBX_RXM_PMP_UART1 = 0x2091031e; 
+const uint32_t UBLOX_CFG_MSGOUT_UBX_RXM_PMP_UART2 = 0x2091031f; 
+const uint32_t UBLOX_CFG_MSGOUT_UBX_RXM_PMP_USB   = 0x20910320; 
+const uint32_t UBLOX_CFG_MSGOUT_UBX_RXM_PMP_SPI   = 0x20910321; 
+const uint32_t UBLOX_CFG_MSGOUT_UBX_MON_PMP_I2C   = 0x20910322; 
+const uint32_t UBLOX_CFG_MSGOUT_UBX_MON_PMP_UART1 = 0x20910323; 
+const uint32_t UBLOX_CFG_MSGOUT_UBX_MON_PMP_UART2 = 0x20910324; 
+const uint32_t UBLOX_CFG_MSGOUT_UBX_MON_PMP_USB   = 0x20910325; 
+const uint32_t UBLOX_CFG_MSGOUT_UBX_MON_PMP_SPI   = 0x20910326;
+
 //CFG-NAV2: Secondary output configuration
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 const uint32_t UBLOX_CFG_NAV2_OUT_ENABLED = 0x10170001; // Enable secondary (NAV2) output
@@ -864,6 +877,18 @@ const uint32_t UBLOX_CFG_ODO_COGMAXSPEED = 0x20220021;	// Upper speed limit for 
 const uint32_t UBLOX_CFG_ODO_COGMAXPOSACC = 0x20220022;	// Maximum acceptable position accuracy for computing low-speed filtered course over ground
 const uint32_t UBLOX_CFG_ODO_VELLPGAIN = 0x20220031;	// Velocity low-pass filter level
 const uint32_t UBLOX_CFG_ODO_COGLPGAIN = 0x20220032;	// Course over ground low-pass filter level (at speed < 8 m/s)
+
+//CFG-PMP: Point-To-MultiPoint for L-band Receiver (NEO-D9S)
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+const uint32_t UBLOX_CFG_PMP_CENTER_FREQUENCY     = 0x40b10011;
+const uint32_t UBLOX_CFG_PMP_SEARCH_WINDOW        = 0x30b10012;
+const uint32_t UBLOX_CFG_PMP_USE_SERVICE_ID       = 0x10b10016;
+const uint32_t UBLOX_CFG_PMP_SERVICE_ID           = 0x30b10017;
+const uint32_t UBLOX_CFG_PMP_DATA_RATE            = 0x30b10013;
+const uint32_t UBLOX_CFG_PMP_USE_DESCRAMBLER      = 0x10b10014;
+const uint32_t UBLOX_CFG_PMP_DESCRAMBLER_INIT     = 0x30b10015;
+const uint32_t UBLOX_CFG_PMP_USE_PRESCRAMBLING    = 0x10b10019;
+const uint32_t UBLOX_CFG_PMP_UNIQUE_WORD          = 0x50b1001a;
 
 //CFG-QZSS: QZSS system configuration
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
