@@ -766,8 +766,12 @@ bool SFE_UBLOX_GNSS::isConnected(uint16_t maxWait)
       return false; //Sensor did not ack
   }
 
-  // Query navigation rate to see whether we get a meaningful response
-  return (getNavigationFrequencyInternal(maxWait));
+  //Poll MON-VER to see whether we get a meaningful response
+  packetCfg.cls = UBX_CLASS_MON;
+  packetCfg.id = UBX_MON_VER;
+  packetCfg.len = 0;
+  packetCfg.startingSpot = 40; //Start at first "extended software information" string
+  return (sendCommand(&packetCfg, maxWait) == SFE_UBLOX_STATUS_DATA_RECEIVED);
 }
 
 //Enable or disable the printing of sent/response HEX values.
@@ -7310,6 +7314,43 @@ uint8_t SFE_UBLOX_GNSS::setVal32(uint32_t key, uint32_t value, uint8_t layer, ui
   payloadCfg[9] = value >> 8 * 1;
   payloadCfg[10] = value >> 8 * 2;
   payloadCfg[11] = value >> 8 * 3;
+
+  //Send VALSET command with this key and value
+  return (sendCommand(&packetCfg, maxWait) == SFE_UBLOX_STATUS_DATA_SENT); // We are only expecting an ACK
+}
+
+//Given a key, set a 64-bit value
+//This function takes a full 64-bit key
+//Default layer is all: RAM+BBR+Flash
+//Configuration of modern u-blox modules is now done via getVal/setVal/delVal, ie protocol v27 and above found on ZED-F9P
+uint8_t SFE_UBLOX_GNSS::setVal64(uint32_t key, uint64_t value, uint8_t layer, uint16_t maxWait)
+{
+  packetCfg.cls = UBX_CLASS_CFG;
+  packetCfg.id = UBX_CFG_VALSET;
+  packetCfg.len = 4 + 4 + 8; //4 byte header, 4 byte key ID, 8 bytes of value
+  packetCfg.startingSpot = 0;
+
+  //Clear packet payload
+  memset(payloadCfg, 0, packetCfg.len);
+
+  payloadCfg[0] = 0;     //Message Version - set to 0
+  payloadCfg[1] = layer; //By default we ask for the BBR layer
+
+  //Load key into outgoing payload
+  payloadCfg[4] = key >> 8 * 0; //Key LSB
+  payloadCfg[5] = key >> 8 * 1;
+  payloadCfg[6] = key >> 8 * 2;
+  payloadCfg[7] = key >> 8 * 3;
+
+  //Load user's value
+  payloadCfg[8]  = value >> 8 * 0; //Value LSB
+  payloadCfg[9]  = value >> 8 * 1;
+  payloadCfg[10] = value >> 8 * 2;
+  payloadCfg[11] = value >> 8 * 3;
+  payloadCfg[12] = value >> 8 * 4;
+  payloadCfg[13] = value >> 8 * 5;
+  payloadCfg[14] = value >> 8 * 6;
+  payloadCfg[15] = value >> 8 * 7;
 
   //Send VALSET command with this key and value
   return (sendCommand(&packetCfg, maxWait) == SFE_UBLOX_STATUS_DATA_SENT); // We are only expecting an ACK
