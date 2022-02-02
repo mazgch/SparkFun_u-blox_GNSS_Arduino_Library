@@ -907,6 +907,7 @@ public:
 	uint8_t setVal8(uint32_t keyID, uint8_t value, uint8_t layer = VAL_LAYER_ALL, uint16_t maxWait = 250);				 //Sets the 8-bit value at a given group/id/size location
 	uint8_t setVal16(uint32_t keyID, uint16_t value, uint8_t layer = VAL_LAYER_ALL, uint16_t maxWait = 250);			 //Sets the 16-bit value at a given group/id/size location
 	uint8_t setVal32(uint32_t keyID, uint32_t value, uint8_t layer = VAL_LAYER_ALL, uint16_t maxWait = 250);			 //Sets the 32-bit value at a given group/id/size location
+	uint8_t setVal64(uint32_t keyID, uint64_t value, uint8_t layer = VAL_LAYER_ALL, uint16_t maxWait = 250);             		 //Sets the 64-bit value at a given group/id/size location
 	uint8_t newCfgValset8(uint32_t keyID, uint8_t value, uint8_t layer = VAL_LAYER_ALL);								 //Define a new UBX-CFG-VALSET with the given KeyID and 8-bit value
 	uint8_t newCfgValset16(uint32_t keyID, uint16_t value, uint8_t layer = VAL_LAYER_ALL);								 //Define a new UBX-CFG-VALSET with the given KeyID and 16-bit value
 	uint8_t newCfgValset32(uint32_t keyID, uint32_t value, uint8_t layer = VAL_LAYER_ALL);								 //Define a new UBX-CFG-VALSET with the given KeyID and 32-bit value
