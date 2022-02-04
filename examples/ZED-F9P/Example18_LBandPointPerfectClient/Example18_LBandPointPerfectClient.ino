@@ -85,10 +85,10 @@ void mqttMessageHandler(int messageSize) {
 }
 
 bool checkLband() {
-  // TODO: This is a hack we capture the LBAND RXM-PMP message here using direct Wire 0x43 access 
-  // and just forward all its data to the GNSS. Instead it would be better if the SFE_UBLOX_GNSS 
-  // would capture the RXM-PMP message and we could attach a callback to it. 
-  // An alternative way would be to connect TX or NEO-D9S to a RX of the ZED-F9
+  /* TODO: This is a hack we capture the LBAND RXM-PMP message here using direct Wire 0x43 access 
+  and just forward all its data to the GNSS. Instead it would be better if the SFE_UBLOX_GNSS 
+  would capture the RXM-PMP message and we could attach a callback to it than sens it to the GNSS. 
+  An alternative way would be to connect TX or NEO-D9S to a RX of the ZED-F9 */
   Wire.beginTransmission(0x43);
   Wire.write(0xFD);
   int ok = (0 == Wire.endTransmission(false));
