@@ -41,131 +41,19 @@
 #include <WiFiClientSecure.h>  // https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFiClientSecure
 #include <ArduinoMqttClient.h> // https://github.com/arduino-libraries/ArduinoMqttClient 
 #include <Arduino_JSON.h>       // https://github.com/bblanchon/ArduinoJson
-//The ESP32 core has a built in base64 library but not every platform does
-//We'll use an external lib if necessary.
-#if defined(ARDUINO_ARCH_ESP32)
-#include "base64.h" //Built-in ESP32 library
-#else
-#include <Base64.h> //nfriendly library from https://github.com/adamvr/arduino-base64, will work with any platform
-#endif
 #include "secrets.h"
 
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h> //http://librarymanager/All#SparkFun_u-blox_GNSS https://github.com/sparkfun/SparkFun_u-blox_GNSS_Arduino_Library
-   
-// ########################################################################################
-// move to SparkFun_u-blox_GNSS_Arduino_Library/src/u-blox_config_keys.h  880 / 786
-// ########################################################################################
-
-//CFG-PMP: Point-To-MultiPoint for L-band Receiver (NEO-D9S)
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-Sconst uint32_t UBLOX_CFG_PMP_CENTER_FREQUENCY     = 0x40b10011;
-const uint32_t UBLOX_CFG_PMP_SEARCH_WINDOW        = 0x30b10012;
-const uint32_t UBLOX_CFG_PMP_USE_SERVICE_ID       = 0x10b10016;
-const uint32_t UBLOX_CFG_PMP_SERVICE_ID           = 0x30b10017;
-const uint32_t UBLOX_CFG_PMP_DATA_RATE            = 0x30b10013;
-const uint32_t UBLOX_CFG_PMP_USE_DESCRAMBLER      = 0x10b10014;
-const uint32_t UBLOX_CFG_PMP_DESCRAMBLER_INIT     = 0x30b10015;
-const uint32_t UBLOX_CFG_PMP_USE_PRESCRAMBLING    = 0x10b10019;
-const uint32_t UBLOX_CFG_PMP_UNIQUE_WORD          = 0x50b1001a;
-
-const uint32_t UBLOX_CFG_SPARTN_USE_SOURCE        = 0x20a70001;
-
-//Additional CFG_MSGOUT keys for the NEO-D9S
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-const uint32_t UBLOX_CFG_MSGOUT_UBX_RXM_PMP_I2C   = 0x2091031d; 
-const uint32_t UBLOX_CFG_MSGOUT_UBX_RXM_PMP_UART1 = 0x2091031e; 
-const uint32_t UBLOX_CFG_MSGOUT_UBX_RXM_PMP_UART2 = 0x2091031f; 
-const uint32_t UBLOX_CFG_MSGOUT_UBX_RXM_PMP_USB   = 0x20910320; 
-const uint32_t UBLOX_CFG_MSGOUT_UBX_RXM_PMP_SPI   = 0x20910321; 
-const uint32_t UBLOX_CFG_MSGOUT_UBX_MON_PMP_I2C   = 0x20910322; 
-const uint32_t UBLOX_CFG_MSGOUT_UBX_MON_PMP_UART1 = 0x20910323; 
-const uint32_t UBLOX_CFG_MSGOUT_UBX_MON_PMP_UART2 = 0x20910324; 
-const uint32_t UBLOX_CFG_MSGOUT_UBX_MON_PMP_USB   = 0x20910325; 
-const uint32_t UBLOX_CFG_MSGOUT_UBX_MON_PMP_SPI   = 0x20910326;
-
-#if 0
-// ########################################################################################
-// SparkFun_u-blox_GNSS_Arduino_Library.cpp::760
-// ########################################################################################
-
-//Returns true if I2C device ack's
-bool SFE_UBLOX_GNSS::isConnected(uint16_t maxWait)
-{
-  if (commType == COMM_TYPE_I2C)
-  {
-    _i2cPort->beginTransmission((uint8_t)_gpsI2Caddress);
-    if (_i2cPort->endTransmission() != 0)
-      return false; //Sensor did not ack
-  }
-
-  //Poll MON-VER to see whether we get a meaningful response
-  packetCfg.cls = UBX_CLASS_MON;
-  packetCfg.id = UBX_MON_VER;
-  packetCfg.len = 0;
-  packetCfg.startingSpot = 40; //Start at first "extended software information" string
-  return (sendCommand(&packetCfg, maxWait) == SFE_UBLOX_STATUS_DATA_RECEIVED);
-  // Query navigation rate to see whether we get a meaningful response
-  //return (getNavigationFrequencyInternal(maxWait)); // NEO-D9S does not support this :(
-}
-
-// ########################################################################################
-// SparkFun_u-blox_GNSS_Arduino_Library.h::910
-// ########################################################################################
-
-uint8_t setVal64(uint32_t keyID, uint64_t value, uint8_t layer = VAL_LAYER_ALL, uint16_t maxWait = 250);             //Sets the 32-bit value at a given group/id/size location
-    
-// ########################################################################################
-// SparkFun_u-blox_GNSS_Arduino_Library.cpp::7324
-// ########################################################################################
-
-//Given a key, set a 64-bit value
-//This function takes a full 64-bit key
-//Default layer is all: RAM+BBR+Flash
-//Configuration of modern u-blox modules is now done via getVal/setVal/delVal, ie protocol v27 and above found on ZED-F9P
-uint8_t SFE_UBLOX_GNSS::setVal64(uint32_t key, uint64_t value, uint8_t layer, uint16_t maxWait)
-{
-  packetCfg.cls = UBX_CLASS_CFG;
-  packetCfg.id = UBX_CFG_VALSET;
-  packetCfg.len = 4 + 4 + 8; //4 byte header, 4 byte key ID, 8 bytes of value
-  packetCfg.startingSpot = 0;
-
-  //Clear packet payload
-  memset(payloadCfg, 0, packetCfg.len);
-
-  payloadCfg[0] = 0;     //Message Version - set to 0
-  payloadCfg[1] = layer; //By default we ask for the BBR layer
-
-  //Load key into outgoing payload
-  payloadCfg[4] = key >> 8 * 0; //Key LSB
-  payloadCfg[5] = key >> 8 * 1;
-  payloadCfg[6] = key >> 8 * 2;
-  payloadCfg[7] = key >> 8 * 3;
-
-  //Load user's value
-  payloadCfg[8]  = value >> 8 * 0; //Value LSB
-  payloadCfg[9]  = value >> 8 * 1;
-  payloadCfg[10] = value >> 8 * 2;
-  payloadCfg[11] = value >> 8 * 3;
-  payloadCfg[12] = value >> 8 * 4;
-  payloadCfg[13] = value >> 8 * 5;
-  payloadCfg[14] = value >> 8 * 6;
-  payloadCfg[15] = value >> 8 * 7;
-
-  //Send VALSET command with this key and value
-  return (sendCommand(&packetCfg, maxWait) == SFE_UBLOX_STATUS_DATA_SENT); // We are only expecting an ACK
-}
-#endif
 
 //Global variables
 long last_ms = 0;
 WiFiClientSecure wifiClient = WiFiClientSecure();
 MqttClient mqttClient(wifiClient);
-SFE_UBLOX_GNSS myGNSS;
-SFE_UBLOX_GNSS myLBand;
-bool gnssOk = false;
+SFE_UBLOX_GNSS myGNSS;  // the ZED-F9x
+SFE_UBLOX_GNSS myLBand; // NEO-D9S
+bool gnssOk  = false;    
 bool lbandOk = false;
 bool wifiOk = false;
-bool wifiConnected = false;
 bool mqttOk = false;
 uint32_t myLBandFreq = 0;
 const char* myIpTopic = NULL;
@@ -239,7 +127,6 @@ bool setupWiFi() {
   int ok = WiFi.begin(ssid, password);
   Serial.print(F("WiFI: configured and connecting to "));
   Serial.println(ssid);
-  wifiConnected = false;
   return ok; 
 }
 
@@ -353,8 +240,8 @@ void loop()
     else lbandOk = checkLband();
     if (!gnssOk)  gnssOk = detectGNSS();
     int connected = (WiFi.status() == WL_CONNECTED);
-    if (connected != wifiConnected) {
-      wifiConnected = connected;
+    if (connected != wifiOk) {
+      wifiOk = connected;
       if (connected) {
         Serial.print(F("WiFi: connected with IP "));
         Serial.println(WiFi.localIP());
@@ -371,7 +258,7 @@ void loop()
         }
       }
     }
-    if (!mqttOk && wifiConnected) {
+    if (!mqttOk && wifiOk) {
       mqttOk = mqttClient.connect(AWS_IOT_ENDPOINT, AWS_IOT_PORT);
       Serial.print(F("MQTT: connection to broker "));
       Serial.print(AWS_IOT_ENDPOINT);
