@@ -19,10 +19,10 @@ const char MQTT_TOPIC_KEY_IP[]     = "/pp/ubx/0236/ip";
 const char MQTT_TOPIC_MGA[]        = "/pp/ubx/mga";
 
 // the lowest entries have highest priority
-const struct { float lon1; float lon2; float lat1; float lat2; uint32_t lBandFreq; const char* ipTopic; } REGION_LIST[] = {
-   // Continental
-   { -125, -67, -90, 90, 1556290000, "/pp/ip/us" }, // US SPARTAN 1.8
-   {  -25,  70, -90, 90, 1545260000, "/pp/ip/eu" }, // EU SPARTAN 1.8
+const struct { float lon1; float lon2; float lat1; float lat2; const char* ipTopic; uint32_t lBandFreq; } REGION_LIST[] = {
+   // Continetal
+   { -125, -67, -90, 90, "/pp/ip/us", 1556290000 /* /pp/Lb/us */ }, // US SPARTAN 1.8
+   {  -25,  70, -90, 90, "/pp/ip/eu", 1545260000 /* /pp/Lb/eu */ }, // EU SPARTAN 1.8
 };
 
 // <Your PointPerfect Thing> -> Credentials -> Amazon Root Certificate
