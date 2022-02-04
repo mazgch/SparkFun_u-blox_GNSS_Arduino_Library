@@ -6,7 +6,7 @@
   basically do whatever you want with this code.
 
   This example shows how to obtain SPARTN data from a PointPerfect Broker over WiFi
-  and push it over I2C to a ZED-F9x.
+  and push it over I2C to a ZED-F9x and NEO-D9S.
   It's confusing, but the Arduino is acting as a 'client' to the PointPerfect SSR correction service.
 
   You will need to have a valid u-blox Thingstream account and have a PointPerfect Thing and payed plan. 
@@ -30,6 +30,7 @@
   Recommended Hardware:
   MicroMod GNSS Carrier Board: https://www.sparkfun.com/products/17722 
   ESP32 Micromod https://www.sparkfun.com/products/16781
+  NEO-D9S on a reworked NEO-M9N :) board https://www.sparkfun.com/products/15712
 
   Hardware Connections:
   Plug a Qwiic cable into the GNSS and a ESP32 Thing Plus
@@ -57,7 +58,7 @@
 
 //CFG-PMP: Point-To-MultiPoint for L-band Receiver (NEO-D9S)
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-const uint32_t UBLOX_CFG_PMP_CENTER_FREQUENCY     = 0x40b10011;
+Sconst uint32_t UBLOX_CFG_PMP_CENTER_FREQUENCY     = 0x40b10011;
 const uint32_t UBLOX_CFG_PMP_SEARCH_WINDOW        = 0x30b10012;
 const uint32_t UBLOX_CFG_PMP_USE_SERVICE_ID       = 0x10b10016;
 const uint32_t UBLOX_CFG_PMP_SERVICE_ID           = 0x30b10017;
