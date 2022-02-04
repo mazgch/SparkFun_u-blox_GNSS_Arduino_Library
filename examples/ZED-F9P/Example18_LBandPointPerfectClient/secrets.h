@@ -20,7 +20,7 @@ const char MQTT_TOPIC_MGA[]        = "/pp/ubx/mga";
 
 // the lowest entries have highest priority
 const struct { float lon1; float lon2; float lat1; float lat2; const char* ipTopic; uint32_t lBandFreq; } REGION_LIST[] = {
-   // Continetal
+   // Continental
    { -125, -67, -90, 90, "/pp/ip/us", 1556290000 /* /pp/Lb/us */ }, // US SPARTAN 1.8
    {  -25,  70, -90, 90, "/pp/ip/eu", 1545260000 /* /pp/Lb/eu */ }, // EU SPARTAN 1.8
 };
