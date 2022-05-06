@@ -57,18 +57,11 @@
 #include "u-blox_structs.h"
 
 // Uncomment the next line (or add SFE_UBLOX_REDUCED_PROG_MEM as a compiler directive) to reduce the amount of program memory used by the library
-//#define SFE_UBLOX_REDUCED_PROG_MEM // Uncommenting this line will delete the minor debug messages to save memory
+//#define SFE_UBLOX_REDUCED_PROG_MEM // Uncommenting this line will delete the minor debug messages and disable auto-NMEA support to save memory
 
-// Uncomment the next line (or add SFE_UBLOX_DISABLE_AUTO_NMEA as a compiler directive) to reduce the amount of program memory used by the library
-//#define SFE_UBLOX_DISABLE_AUTO_NMEA // Uncommenting this line will disable auto-NMEA support to save memory
-
-// The code exceeds the program memory on the ATmega328P (Arduino Uno), so let's delete the minor debug messages and disable auto-NMEA support anyway
-// However, the ATmega2560 and ATmega1280 _do_ have enough memory, so let's exclude those
-#if !defined(SFE_UBLOX_REDUCED_PROG_MEM) && defined(ARDUINO_ARCH_AVR) && !defined(ARDUINO_AVR_MEGA2560) && !defined(ARDUINO_AVR_MEGA) && !defined(ARDUINO_AVR_ADK)
+// The code just about fills the program memory on the ATmega328P (Arduino Uno), so let's delete the minor debug messages and disable auto-NMEA support anyway
+#if !defined(SFE_UBLOX_REDUCED_PROG_MEM) && defined(ARDUINO_ARCH_AVR)
 #define SFE_UBLOX_REDUCED_PROG_MEM
-#endif
-#if !defined(SFE_UBLOX_DISABLE_AUTO_NMEA) && defined(ARDUINO_ARCH_AVR) && !defined(ARDUINO_AVR_MEGA2560) && !defined(ARDUINO_AVR_MEGA) && !defined(ARDUINO_AVR_ADK)
-#define SFE_UBLOX_DISABLE_AUTO_NMEA
 #endif
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -622,28 +615,18 @@ typedef struct
   bool moduleQueried;
 } moduleSWVersion_t;
 
-const uint32_t SFE_UBLOX_DAYS_FROM_1970_TO_2020 = 18262; // Jan 1st 2020 Epoch = 1577836800 seconds
-const uint16_t SFE_UBLOX_DAYS_SINCE_2020[80] =
+const uint16_t DAYS_SINCE_MONTH[4][16] =
     {
-        0, 366, 731, 1096, 1461, 1827, 2192, 2557, 2922, 3288,
-        3653, 4018, 4383, 4749, 5114, 5479, 5844, 6210, 6575, 6940,
-        7305, 7671, 8036, 8401, 8766, 9132, 9497, 9862, 10227, 10593,
-        10958, 11323, 11688, 12054, 12419, 12784, 13149, 13515, 13880, 14245,
-        14610, 14976, 15341, 15706, 16071, 16437, 16802, 17167, 17532, 17898,
-        18263, 18628, 18993, 19359, 19724, 20089, 20454, 20820, 21185, 21550,
-        21915, 22281, 22646, 23011, 23376, 23742, 24107, 24472, 24837, 25203,
-        25568, 25933, 26298, 26664, 27029, 27394, 27759, 28125, 28490, 28855};
-const uint16_t SFE_UBLOX_DAYS_SINCE_MONTH[2][12] =
-    {
-        {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335}, // Leap Year (Year % 4 == 0)
-        {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334}  // Normal Year
+        {0, 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 335, 335, 335},
+        {0, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 334, 334, 334},
+        {0, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 334, 334, 334},
+        {0, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 334, 334, 334},
 };
 
 class SFE_UBLOX_GNSS
 {
 public:
   SFE_UBLOX_GNSS(void);
-  ~SFE_UBLOX_GNSS(void);
 
 // A default of 250ms for maxWait seems fine for I2C but is not enough for SerialUSB.
 // If you know you are only going to be using I2C / Qwiic communication, you can
@@ -702,18 +685,18 @@ public:
 #if defined(USB_VID)                                                                   // Is the USB Vendor ID defined?
 #if (USB_VID == 0x1B4F)                                                                // Is this a SparkFun board?
 #if !defined(ARDUINO_SAMD51_THING_PLUS) & !defined(ARDUINO_SAMD51_MICROMOD)            // If it is not a SAMD51 Thing Plus or SAMD51 MicroMod
-  void enableDebugging(Stream &debugPort = SerialUSB, bool printLimitedDebug = false); // Given a port to print to, enable debug messages. Default to all, not limited.
+  void enableDebugging(Print &debugPort = SerialUSB, bool printLimitedDebug = false); // Given a port to print to, enable debug messages. Default to all, not limited.
 #else
-  void enableDebugging(Stream &debugPort = Serial, bool printLimitedDebug = false); // Given a port to print to, enable debug messages. Default to all, not limited.
+  void enableDebugging(Print &debugPort = Serial, bool printLimitedDebug = false); // Given a port to print to, enable debug messages. Default to all, not limited.
 #endif
 #else
-  void enableDebugging(Stream &debugPort = Serial, bool printLimitedDebug = false); // Given a port to print to, enable debug messages. Default to all, not limited.
+  void enableDebugging(Print &debugPort = Serial, bool printLimitedDebug = false); // Given a port to print to, enable debug messages. Default to all, not limited.
 #endif
 #else
-  void enableDebugging(Stream &debugPort = Serial, bool printLimitedDebug = false); // Given a port to print to, enable debug messages. Default to all, not limited.
+  void enableDebugging(Print &debugPort = Serial, bool printLimitedDebug = false); // Given a port to print to, enable debug messages. Default to all, not limited.
 #endif
 #else
-  void enableDebugging(Stream &debugPort = Serial, bool printLimitedDebug = false); // Given a port to print to, enable debug messages. Default to all, not limited.
+  void enableDebugging(Print &debugPort = Serial, bool printLimitedDebug = false); // Given a port to print to, enable debug messages. Default to all, not limited.
 #endif
 
   void disableDebugging(void);                       // Turn off debug statements
@@ -835,8 +818,8 @@ public:
   bool setUART2Output(uint8_t comSettings, uint16_t maxWait = defaultMaxWait); // Configure UART2 port to output UBX, NMEA, RTCM3, SPARTN or a combination thereof
   bool setUSBOutput(uint8_t comSettings, uint16_t maxWait = defaultMaxWait);   // Configure USB port to output UBX, NMEA, RTCM3, SPARTN or a combination thereof
   bool setSPIOutput(uint8_t comSettings, uint16_t maxWait = defaultMaxWait);   // Configure SPI port to output UBX, NMEA, RTCM3, SPARTN or a combination thereof
-  void setNMEAOutputPort(Stream &nmeaOutputPort);                              // Sets the internal variable for the port to direct NMEA characters to
-  void setOutputPort(Stream &outputPort);                                      // Sets the internal variable for the port to direct ALL characters to
+  void setNMEAOutputPort(Print &nmeaOutputPort);                              // Sets the internal variable for the port to direct NMEA characters to
+  void setOutputPort(Print &outputPort);                                      // Sets the internal variable for the port to direct ALL characters to
 
   // Reset to defaults
 
@@ -860,17 +843,18 @@ public:
   bool disableRTCMmessage(uint8_t messageNumber, uint8_t portID, uint16_t maxWait = defaultMaxWait);                  // Turn off given RTCM message from a given port
 
   // Functions used for RTK and base station setup
-  bool getSurveyMode(uint16_t maxWait = defaultMaxWait);                                                                     // Get the current TimeMode3 settings
-  bool setSurveyMode(uint8_t mode, uint16_t observationTime, float requiredAccuracy, uint16_t maxWait = defaultMaxWait);     // Control survey in mode
-  bool setSurveyModeFull(uint8_t mode, uint32_t observationTime, float requiredAccuracy, uint16_t maxWait = defaultMaxWait); // Control survey in mode
-  bool enableSurveyMode(uint16_t observationTime, float requiredAccuracy, uint16_t maxWait = defaultMaxWait);                // Begin Survey-In for NEO-M8P / ZED-F9x
-  bool enableSurveyModeFull(uint32_t observationTime, float requiredAccuracy, uint16_t maxWait = defaultMaxWait);            // Begin Survey-In for NEO-M8P / ZED-F9x
-  bool disableSurveyMode(uint16_t maxWait = defaultMaxWait);                                                                 // Stop Survey-In mode
+  // It is probably safe to assume that users of the RTK will be using I2C / Qwiic. So let's leave maxWait set to 250ms.
+  bool getSurveyMode(uint16_t maxWait = 250);                                                                     // Get the current TimeMode3 settings
+  bool setSurveyMode(uint8_t mode, uint16_t observationTime, float requiredAccuracy, uint16_t maxWait = 250);     // Control survey in mode
+  bool setSurveyModeFull(uint8_t mode, uint32_t observationTime, float requiredAccuracy, uint16_t maxWait = 250); // Control survey in mode
+  bool enableSurveyMode(uint16_t observationTime, float requiredAccuracy, uint16_t maxWait = 250);                // Begin Survey-In for NEO-M8P / ZED-F9x
+  bool enableSurveyModeFull(uint32_t observationTime, float requiredAccuracy, uint16_t maxWait = 250);            // Begin Survey-In for NEO-M8P / ZED-F9x
+  bool disableSurveyMode(uint16_t maxWait = 250);                                                                 // Stop Survey-In mode
   // Given coordinates, put receiver into static position. Set latlong to true to pass in lat/long values instead of ecef.
   // For ECEF the units are: cm, 0.1mm, cm, 0.1mm, cm, 0.1mm
   // For Lat/Lon/Alt the units are: degrees^-7, degrees^-9, degrees^-7, degrees^-9, cm, 0.1mm
-  bool setStaticPosition(int32_t ecefXOrLat, int8_t ecefXOrLatHP, int32_t ecefYOrLon, int8_t ecefYOrLonHP, int32_t ecefZOrAlt, int8_t ecefZOrAltHP, bool latLong = false, uint16_t maxWait = defaultMaxWait);
-  bool setStaticPosition(int32_t ecefXOrLat, int32_t ecefYOrLon, int32_t ecefZOrAlt, bool latLong = false, uint16_t maxWait = defaultMaxWait);
+  bool setStaticPosition(int32_t ecefXOrLat, int8_t ecefXOrLatHP, int32_t ecefYOrLon, int8_t ecefYOrLonHP, int32_t ecefZOrAlt, int8_t ecefZOrAltHP, bool latLong = false, uint16_t maxWait = 250);
+  bool setStaticPosition(int32_t ecefXOrLat, int32_t ecefYOrLon, int32_t ecefZOrAlt, bool latLong = false, uint16_t maxWait = 250);
   bool setDGNSSConfiguration(sfe_ublox_dgnss_mode_e dgnssMode = SFE_UBLOX_DGNSS_MODE_FIXED, uint16_t maxWait = defaultMaxWait); // Set the DGNSS differential mode
 
   // Read the module's protocol version
@@ -927,9 +911,6 @@ public:
   // Hardware status (including jamming)
   bool getHWstatus(UBX_MON_HW_data_t *data = NULL, uint16_t maxWait = defaultMaxWait); // Get the hardware status using UBX_MON_HW
 
-  // Extended hardware status
-  bool getHW2status(UBX_MON_HW2_data_t *data = NULL, uint16_t maxWait = defaultMaxWait); // Get the extended hardware status using UBX_MON_HW2
-
   // UBX-CFG-NAVX5 - get/set the ackAiding byte. If ackAiding is 1, UBX-MGA-ACK messages will be sent by the module to acknowledge the MGA data
   uint8_t getAckAiding(uint16_t maxWait = defaultMaxWait);                 // Get the ackAiding byte - returns 255 if the sendCommand fails
   bool setAckAiding(uint8_t ackAiding, uint16_t maxWait = defaultMaxWait); // Set the ackAiding byte
@@ -953,33 +934,35 @@ public:
 
   // General configuration (used only on protocol v27 and higher - ie, ZED-F9P)
 
-  uint32_t createKey(uint16_t group, uint16_t id, uint8_t size);                                                                  // Form 32-bit key from group/id/size
-  sfe_ublox_status_e getVal(uint32_t keyID, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = defaultMaxWait);                    // Load payload with response
-  uint8_t getVal8(uint32_t keyID, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = defaultMaxWait);                              // Returns the value at a given key location
-  uint16_t getVal16(uint32_t keyID, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = defaultMaxWait);                            // Returns the value at a given key location
-  uint32_t getVal32(uint32_t keyID, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = defaultMaxWait);                            // Returns the value at a given key location
-  uint64_t getVal64(uint32_t keyID, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = defaultMaxWait);                            // Returns the value at a given key location
-  uint8_t getVal8(uint16_t group, uint16_t id, uint8_t size, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = defaultMaxWait);   // Returns the value at a given group/id/size location
-  uint16_t getVal16(uint16_t group, uint16_t id, uint8_t size, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = defaultMaxWait); // Returns the value at a given group/id/size location
-  uint32_t getVal32(uint16_t group, uint16_t id, uint8_t size, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = defaultMaxWait); // Returns the value at a given group/id/size location
-  uint64_t getVal64(uint16_t group, uint16_t id, uint8_t size, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = defaultMaxWait); // Returns the value at a given group/id/size location
-  uint8_t setVal(uint32_t keyID, uint16_t value, uint8_t layer = VAL_LAYER_ALL, uint16_t maxWait = defaultMaxWait);               // Sets the 16-bit value at a given group/id/size location
-  uint8_t setVal8(uint32_t keyID, uint8_t value, uint8_t layer = VAL_LAYER_ALL, uint16_t maxWait = defaultMaxWait);               // Sets the 8-bit value at a given group/id/size location
-  uint8_t setVal16(uint32_t keyID, uint16_t value, uint8_t layer = VAL_LAYER_ALL, uint16_t maxWait = defaultMaxWait);             // Sets the 16-bit value at a given group/id/size location
-  uint8_t setVal32(uint32_t keyID, uint32_t value, uint8_t layer = VAL_LAYER_ALL, uint16_t maxWait = defaultMaxWait);             // Sets the 32-bit value at a given group/id/size location
-  uint8_t setVal64(uint32_t keyID, uint64_t value, uint8_t layer = VAL_LAYER_ALL, uint16_t maxWait = defaultMaxWait);             // Sets the 64-bit value at a given group/id/size location
-  uint8_t newCfgValset8(uint32_t keyID, uint8_t value, uint8_t layer = VAL_LAYER_ALL);                                            // Define a new UBX-CFG-VALSET with the given KeyID and 8-bit value
-  uint8_t newCfgValset16(uint32_t keyID, uint16_t value, uint8_t layer = VAL_LAYER_ALL);                                          // Define a new UBX-CFG-VALSET with the given KeyID and 16-bit value
-  uint8_t newCfgValset32(uint32_t keyID, uint32_t value, uint8_t layer = VAL_LAYER_ALL);                                          // Define a new UBX-CFG-VALSET with the given KeyID and 32-bit value
-  uint8_t newCfgValset64(uint32_t keyID, uint64_t value, uint8_t layer = VAL_LAYER_ALL);                                          // Define a new UBX-CFG-VALSET with the given KeyID and 64-bit value
-  uint8_t addCfgValset8(uint32_t keyID, uint8_t value);                                                                           // Add a new KeyID and 8-bit value to an existing UBX-CFG-VALSET ubxPacket
-  uint8_t addCfgValset16(uint32_t keyID, uint16_t value);                                                                         // Add a new KeyID and 16-bit value to an existing UBX-CFG-VALSET ubxPacket
-  uint8_t addCfgValset32(uint32_t keyID, uint32_t value);                                                                         // Add a new KeyID and 32-bit value to an existing UBX-CFG-VALSET ubxPacket
-  uint8_t addCfgValset64(uint32_t keyID, uint64_t value);                                                                         // Add a new KeyID and 64-bit value to an existing UBX-CFG-VALSET ubxPacket
-  uint8_t sendCfgValset8(uint32_t keyID, uint8_t value, uint16_t maxWait = defaultMaxWait);                                       // Add the final KeyID and 8-bit value to an existing UBX-CFG-VALSET ubxPacket and send it
-  uint8_t sendCfgValset16(uint32_t keyID, uint16_t value, uint16_t maxWait = defaultMaxWait);                                     // Add the final KeyID and 16-bit value to an existing UBX-CFG-VALSET ubxPacket and send it
-  uint8_t sendCfgValset32(uint32_t keyID, uint32_t value, uint16_t maxWait = defaultMaxWait);                                     // Add the final KeyID and 32-bit value to an existing UBX-CFG-VALSET ubxPacket and send it
-  uint8_t sendCfgValset64(uint32_t keyID, uint64_t value, uint16_t maxWait = defaultMaxWait);                                     // Add the final KeyID and 64-bit value to an existing UBX-CFG-VALSET ubxPacket and send it
+  // It is probably safe to assume that users of the ZED-F9P will be using I2C / Qwiic.
+  // If they are using Serial then the higher baud rate will also help. So let's leave maxWait set to 250ms.
+  uint32_t createKey(uint16_t group, uint16_t id, uint8_t size);                                                       // Form 32-bit key from group/id/size
+  sfe_ublox_status_e getVal(uint32_t keyID, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = 250);                    // Load payload with response
+  uint8_t getVal8(uint32_t keyID, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = 250);                              // Returns the value at a given key location
+  uint16_t getVal16(uint32_t keyID, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = 250);                            // Returns the value at a given key location
+  uint32_t getVal32(uint32_t keyID, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = 250);                            // Returns the value at a given key location
+  uint64_t getVal64(uint32_t keyID, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = 250);                            // Returns the value at a given key location
+  uint8_t getVal8(uint16_t group, uint16_t id, uint8_t size, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = 250);   // Returns the value at a given group/id/size location
+  uint16_t getVal16(uint16_t group, uint16_t id, uint8_t size, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = 250); // Returns the value at a given group/id/size location
+  uint32_t getVal32(uint16_t group, uint16_t id, uint8_t size, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = 250); // Returns the value at a given group/id/size location
+  uint64_t getVal64(uint16_t group, uint16_t id, uint8_t size, uint8_t layer = VAL_LAYER_RAM, uint16_t maxWait = 250); // Returns the value at a given group/id/size location
+  uint8_t setVal(uint32_t keyID, uint16_t value, uint8_t layer = VAL_LAYER_ALL, uint16_t maxWait = 250);               // Sets the 16-bit value at a given group/id/size location
+  uint8_t setVal8(uint32_t keyID, uint8_t value, uint8_t layer = VAL_LAYER_ALL, uint16_t maxWait = 250);               // Sets the 8-bit value at a given group/id/size location
+  uint8_t setVal16(uint32_t keyID, uint16_t value, uint8_t layer = VAL_LAYER_ALL, uint16_t maxWait = 250);             // Sets the 16-bit value at a given group/id/size location
+  uint8_t setVal32(uint32_t keyID, uint32_t value, uint8_t layer = VAL_LAYER_ALL, uint16_t maxWait = 250);             // Sets the 32-bit value at a given group/id/size location
+  uint8_t setVal64(uint32_t keyID, uint64_t value, uint8_t layer = VAL_LAYER_ALL, uint16_t maxWait = 250);             // Sets the 64-bit value at a given group/id/size location
+  uint8_t newCfgValset8(uint32_t keyID, uint8_t value, uint8_t layer = VAL_LAYER_ALL);                                 // Define a new UBX-CFG-VALSET with the given KeyID and 8-bit value
+  uint8_t newCfgValset16(uint32_t keyID, uint16_t value, uint8_t layer = VAL_LAYER_ALL);                               // Define a new UBX-CFG-VALSET with the given KeyID and 16-bit value
+  uint8_t newCfgValset32(uint32_t keyID, uint32_t value, uint8_t layer = VAL_LAYER_ALL);                               // Define a new UBX-CFG-VALSET with the given KeyID and 32-bit value
+  uint8_t newCfgValset64(uint32_t keyID, uint64_t value, uint8_t layer = VAL_LAYER_ALL);                               // Define a new UBX-CFG-VALSET with the given KeyID and 64-bit value
+  uint8_t addCfgValset8(uint32_t keyID, uint8_t value);                                                                // Add a new KeyID and 8-bit value to an existing UBX-CFG-VALSET ubxPacket
+  uint8_t addCfgValset16(uint32_t keyID, uint16_t value);                                                              // Add a new KeyID and 16-bit value to an existing UBX-CFG-VALSET ubxPacket
+  uint8_t addCfgValset32(uint32_t keyID, uint32_t value);                                                              // Add a new KeyID and 32-bit value to an existing UBX-CFG-VALSET ubxPacket
+  uint8_t addCfgValset64(uint32_t keyID, uint64_t value);                                                              // Add a new KeyID and 64-bit value to an existing UBX-CFG-VALSET ubxPacket
+  uint8_t sendCfgValset8(uint32_t keyID, uint8_t value, uint16_t maxWait = 250);                                       // Add the final KeyID and 8-bit value to an existing UBX-CFG-VALSET ubxPacket and send it
+  uint8_t sendCfgValset16(uint32_t keyID, uint16_t value, uint16_t maxWait = 250);                                     // Add the final KeyID and 16-bit value to an existing UBX-CFG-VALSET ubxPacket and send it
+  uint8_t sendCfgValset32(uint32_t keyID, uint32_t value, uint16_t maxWait = 250);                                     // Add the final KeyID and 32-bit value to an existing UBX-CFG-VALSET ubxPacket and send it
+  uint8_t sendCfgValset64(uint32_t keyID, uint64_t value, uint16_t maxWait = 250);                                     // Add the final KeyID and 64-bit value to an existing UBX-CFG-VALSET ubxPacket and send it
 
   // get and set functions for all of the "automatic" message processing
 
@@ -1111,17 +1094,11 @@ public:
   void flushNAVCLOCK();                                                                                                   // Mark all the data as read/stale
   void logNAVCLOCK(bool enabled = true);                                                                                  // Log data to file buffer
 
-  bool getSurveyStatus(uint16_t maxWait = 2100);                                                                        // NAV SVIN - Reads survey in status
-  bool setAutoNAVSVIN(bool enabled, uint16_t maxWait = defaultMaxWait);                                                 // Enable/disable automatic survey in reports at the navigation frequency
-  bool setAutoNAVSVIN(bool enabled, bool implicitUpdate, uint16_t maxWait = defaultMaxWait);                            // Enable/disable automatic survey in reports at the navigation frequency, with implicitUpdate == false accessing stale data will not issue parsing of data in the rxbuffer of your interface, instead you have to call checkUblox when you want to perform an update
-  bool setAutoNAVSVINrate(uint8_t rate, bool implicitUpdate = true, uint16_t maxWait = defaultMaxWait);                 // Set the rate for automatic SVIN reports
-  bool setAutoNAVSVINcallbackPtr(void (*callbackPointerPtr)(UBX_NAV_SVIN_data_t *), uint16_t maxWait = defaultMaxWait); // Enable automatic SVIN reports at the navigation frequency. Data is accessed from the callback.
-  bool assumeAutoNAVSVIN(bool enabled, bool implicitUpdate = true);                                                     // In case no config access to the GPS is possible and survey in is send cyclically already
-  void flushNAVSVIN();                                                                                                  // Mark all the data as read/stale
-  void logNAVSVIN(bool enabled = true);                                                                                 // Log data to file buffer
+  // Add "auto" support for NAV SVIN - to avoid needing 'global' storage
+  bool getSurveyStatus(uint16_t maxWait); // Reads survey in status
 
   // Add "auto" support for NAV TIMELS - to avoid needing 'global' storage
-  bool getLeapSecondEvent(uint16_t maxWait = defaultMaxWait); // Reads leap second event info
+  bool getLeapSecondEvent(uint16_t maxWait); // Reads leap second event info
 
   bool getNAVSAT(uint16_t maxWait = defaultMaxWait);                                                                  // Query module for latest AssistNow Autonomous status and load global vars:. If autoNAVSAT is disabled, performs an explicit poll and waits, if enabled does not block. Returns true if new NAVSAT is available.
   bool setAutoNAVSAT(bool enabled, uint16_t maxWait = defaultMaxWait);                                                // Enable/disable automatic NAVSAT reports at the navigation frequency
@@ -1161,8 +1138,6 @@ public:
   //       The NEO-D9S does not support UBX-CFG-MSG
   bool setRXMPMPcallbackPtr(void (*callbackPointerPtr)(UBX_RXM_PMP_data_t *));                // Callback receives a pointer to the data, instead of _all_ the data. Much kinder on the stack!
   bool setRXMPMPmessageCallbackPtr(void (*callbackPointerPtr)(UBX_RXM_PMP_message_data_t *)); // Use this if you want all of the PMP message (including sync chars, checksum, etc.) to push to a GNSS
-
-  bool setRXMCORcallbackPtr(void (*callbackPointerPtr)(UBX_RXM_COR_data_t *)); // RXM COR
 
   bool getRXMSFRBX(uint16_t maxWait = defaultMaxWait);                                                                    // RXM SFRBX
   bool setAutoRXMSFRBX(bool enabled, uint16_t maxWait = defaultMaxWait);                                                  // Enable/disable automatic RXM SFRBX reports at the navigation frequency
@@ -1456,7 +1431,7 @@ public:
   void setProcessNMEAMask(uint32_t messages = SFE_UBLOX_FILTER_NMEA_ALL); // Control which NMEA messages are passed to processNMEA. Default to passing ALL messages
   uint32_t getProcessNMEAMask();                                          // Return which NMEA messages are passed to processNMEA
 
-#ifndef SFE_UBLOX_DISABLE_AUTO_NMEA
+#ifndef SFE_UBLOX_REDUCED_PROG_MEM
   // Support for "auto" storage of NMEA messages
   uint8_t getLatestNMEAGPGGA(NMEA_GGA_data_t *data);                           // Return the most recent GPGGA: 0 = no data, 1 = stale data, 2 = fresh data
   bool setNMEAGPGGAcallback(void (*callbackPointer)(NMEA_GGA_data_t));         // Enable a callback on the arrival of a GPGGA message
@@ -1517,7 +1492,6 @@ public:
 
   UBX_RXM_PMP_t *packetUBXRXMPMP = NULL;                // Pointer to struct. RAM will be allocated for this if/when necessary
   UBX_RXM_PMP_message_t *packetUBXRXMPMPmessage = NULL; // Pointer to struct. RAM will be allocated for this if/when necessary
-  UBX_RXM_COR_t *packetUBXRXMCOR = NULL;                // Pointer to struct. RAM will be allocated for this if/when necessary
   UBX_RXM_SFRBX_t *packetUBXRXMSFRBX = NULL;            // Pointer to struct. RAM will be allocated for this if/when necessary
   UBX_RXM_RAWX_t *packetUBXRXMRAWX = NULL;              // Pointer to struct. RAM will be allocated for this if/when necessary
 
@@ -1539,7 +1513,7 @@ public:
   UBX_MGA_ACK_DATA0_t *packetUBXMGAACK = NULL; // Pointer to struct. RAM will be allocated for this if/when necessary
   UBX_MGA_DBD_t *packetUBXMGADBD = NULL;       // Pointer to struct. RAM will be allocated for this if/when necessary
 
-#ifndef SFE_UBLOX_DISABLE_AUTO_NMEA
+#ifndef SFE_UBLOX_REDUCED_PROG_MEM
   NMEA_GPGGA_t *storageNMEAGPGGA = NULL; // Pointer to struct. RAM will be allocated for this if/when necessary
   NMEA_GNGGA_t *storageNMEAGNGGA = NULL; // Pointer to struct. RAM will be allocated for this if/when necessary
   NMEA_GPVTG_t *storageNMEAGPVTG = NULL; // Pointer to struct. RAM will be allocated for this if/when necessary
@@ -1616,7 +1590,6 @@ private:
   bool initPacketUBXNAVAOPSTATUS();  // Allocate RAM for packetUBXNAVAOPSTATUS and initialize it
   bool initPacketUBXRXMPMP();        // Allocate RAM for packetUBXRXMPMP and initialize it
   bool initPacketUBXRXMPMPmessage(); // Allocate RAM for packetUBXRXMPMPRaw and initialize it
-  bool initPacketUBXRXMCOR();        // Allocate RAM for packetUBXRXMCOR and initialize it
   bool initPacketUBXRXMSFRBX();      // Allocate RAM for packetUBXRXMSFRBX and initialize it
   bool initPacketUBXRXMRAWX();       // Allocate RAM for packetUBXRXMRAWX and initialize it
   bool initPacketUBXCFGPRT();        // Allocate RAM for packetUBXCFGPRT and initialize it
@@ -1633,7 +1606,7 @@ private:
   bool initPacketUBXMGAACK();        // Allocate RAM for packetUBXMGAACK and initialize it
   bool initPacketUBXMGADBD();        // Allocate RAM for packetUBXMGADBD and initialize it
 
-#ifndef SFE_UBLOX_DISABLE_AUTO_NMEA
+#ifndef SFE_UBLOX_REDUCED_PROG_MEM
   bool initStorageNMEAGPGGA(); // Allocate RAM for incoming NMEA GPGGA messages and initialize it
   bool initStorageNMEAGNGGA(); // Allocate RAM for incoming NMEA GNGGA messages and initialize it
   bool initStorageNMEAGPVTG(); // Allocate RAM for incoming NMEA GPVTG messages and initialize it
@@ -1647,9 +1620,9 @@ private:
   // Variables
   TwoWire *_i2cPort;              // The generic connection to user's chosen I2C hardware
   Stream *_serialPort;            // The generic connection to user's chosen Serial hardware
-  Stream *_nmeaOutputPort = NULL; // The user can assign an output port to print NMEA sentences if they wish
-  Stream *_debugSerial;           // The stream to send debug messages to if enabled
-  Stream *_outputPort = NULL;
+  Print *_nmeaOutputPort = NULL; // The user can assign an output port to print NMEA sentences if they wish
+  Print *_debugSerial;           // The stream to send debug messages to if enabled
+  Print *_outputPort = NULL;
   SPIClass *_spiPort; // The instance of SPIClass
   uint8_t _csPin;     // The chip select pin
   uint32_t _spiSpeed; // The speed to use for SPI (Hz)
